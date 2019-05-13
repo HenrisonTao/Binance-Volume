@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Binance成交量</title>
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.js"></script>
+    <style>
+        p {
+            margin: 3px;
+            padding: 3px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var Lock = true;
+            $("#volLimit").val(1)
+            var ws = new WebSocket("wss://www.bitmex.com/realtime?subscribe=trade:XBTUSD");
+
+            ws.onopen = function (evt) {
+                console.log("Connection open ...");
+            };
+            ws.onmessage = function (evt) {
+                var txt = JSON.parse(evt.data);
+                var price = txt.data[0].price;
+                $('#BMP').text(price);
+
+            };
+            ws.onclose = function (evt) {
+                console.log("Connection closed.");
+            };
+
+            var Bwss = new WebSocket("wss://stream.binance.com:9443/ws/btcusdt@trade")
+            Bwss.onopen = function (evt) {
+                console.log("Connection open ...");
+            };
+            Bwss.onmessage = function (evt) {
+                var txt = JSON.parse(evt.data);
+                var Limit = $("#volLimit").val()
+                $('#Bin').text(txt.p * 100 / 100);
+                if (txt.q > Limit && Lock) {
+                    addItem(txt)
+                }
+                console.log(txt)
+            };
+            Bwss.onclose = function (evt) {
+                console.log("Connection closed.");
+                alert("Connection Lost! Refresh page");
+            };
+
+            var BuyCount = 0;
+            var SellCount = 0;
+            var Buy_event = 0, Sell_event = 0;
+
+            function addItem(data) {
+                oper = "";
+
+                var ele = "<p";
+
+                if (data.m == true) {
+                    oper = "SELL";
+                    ele += ' style="color:#ff4d4d">  ';
+                    SellCount += parseFloat(data.q);
+                } else {
+                    oper = "BUY";
+                    ele += ' style="color:#00cc00">  ';
+                    BuyCount += parseFloat(data.q);
+                }
+
+                ele += timeConverter(data.T) + "&nbsp;&nbsp;&nbsp;" + parseFloat(data.p) + "@" + oper + "&nbsp;&nbsp;&nbsp;" + data.q + "</p>";
+                newItem = $(ele).hide();
+
+                $("#mylist").prepend(newItem);
+
+                newItem.fadeIn();
+            }
+
+            function RefreshCount() {
+                $("#BUYALL").text(BuyCount.toFixed(4));
+                $("#SELLALL").text(SellCount.toFixed(4));
+            }
+
+            function timeConverter(UNIX_timestamp) {
+                var a = new Date(UNIX_timestamp);
+                var hour = a.getHours();
+                var min = a.getMinutes();
+                var sec = a.getSeconds();
+
+                if (hour < 10) {
+                    hour = "0" + hour;
+                }
+                if (min < 10) {
+                    min = "0" + min;
+                }
+                if (sec < 10) {
+                    sec = "0" + sec;
+                }
+                var time = hour + ':' + min + ':' + sec;
+                return time;
+
+            }
+
+            function startVOL(isRun) {
+                if (isRun) {
+                    Lock = false;
+                    alert("OFF!");
+                }
+                else {
+                    Lock = true;
+                    alert("ON!");
+                }
+            }
+
+            setInterval(RefreshCount, 1500);
+
+        });
+    </script>
+
+    <h3 align="center">BTC價格</h3>
+
+    <div>
+        <table align="center" border="1">
+            <tr>
+                <!--<th><h3 align="center">Bitmex價格</h3></th>-->
+                <th style="width:50%">Bitmex</th>
+
+                <th style="width:50%">Binance </th>
+            </tr>
+            <tr>
+                <td align="center">
+                    <h1 id="BMP"></h1>
+                </td>
+                <td align="center">
+                    <h1 id="Bin"></h1>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <hr />
+
+    <h3 align="center">Binance單筆大單成交</h3>
+
+    <div>
+        <table align="center" border="1">
+            <tr>
+                <th style="width:40%">大單成交累積買顆數量</th>
+                <th style="width:20%">顆量門檻(可調整) </th>
+                <th style="width:40%">大單成交累積賣顆數量</th>
+
+            </tr>
+            <tr>
+                <td align="center">
+                    <h1 id="BUYALL"></h1>
+                </td>
+
+                <td align="center">
+                    <input type="number" id="volLimit" min="0" step="1" style="text-align:center">
+                </td>
+
+                <td align="center">
+                    <h1 id="SELLALL"></h1>
+                </td>
+            </tr>
+        </table>
+
+        <ul align="center" id="mylist">
+        </ul>
+
+    </div>
+</body>
+
+</html>
