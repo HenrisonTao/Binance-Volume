@@ -3,4 +3,4 @@ The monitor of  Bitcoin volume and price in [Binance](https://www.binance.com/tw
 
 ### Getting Started
 1. Go to Link :  [https://henrisontao.github.io/Binance-Volume/](https://henrisontao.github.io/Binance-Volume/)
-2. Edit the KKK to filter the volume amount; the default value is set to one.
+2. Edit the `Amount Filter` to filter the volume amount; the default value is set to one.
